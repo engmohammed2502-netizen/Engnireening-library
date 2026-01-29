@@ -1,1 +1,15 @@
  https://highland-canal-docs-lowest.trycloudflare.com
+
+
+I am facing recurring TypeScript errors across my React project related to the 'role' variable (specifically TS2367 and TS2345). The errors occur because 'role' is sometimes undefined, or TypeScript does not recognize it as a valid string for comparison (e.g., in .includes() or strict equality checks).
+
+Please scan all files in the 'client/src' directory (especially Contexts, Components, and Pages) and fix these issues globally by applying the following rules:
+
+1. Whenever 'role' is used in a comparison (e.g., `role === 'student'`) or array method (e.g., `['root'].includes(role)`), cast it to 'any' or provide a fallback string to satisfy strict type checking.
+   - Example fix: `(role as any) === 'student'` OR `['root'].includes(role || '')`.
+
+2. In 'ThemeContext.tsx', fix the 'fontFamily' type error by casting the conditional result to 'any' before assignment.
+
+3. In 'Navbar.tsx' and others, ensure `.includes(role)` handles undefined by changing it to `.includes(role || '')`.
+
+Apply these fixes to all occurrences in the project to resolve the build errors immediately.
