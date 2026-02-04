@@ -21,3 +21,17 @@ sudo sed -i 's/"strict": true/"strict": false/g' tsconfig.json
 # 2. هذا الأمر يجبر النظام على تجاهل الأخطاء المتبقية وبناء الموقع بالقوة
 sudo -u engineering-library bash -c "export CI=false && export TSC_COMPILE_ON_ERROR=true && npm run build"
 
+
+
+
+
+
+
+
+
+
+> Successfully deployed the source code to the server and extracted it into the appropriate directory.
+Set up and launched the database, then configured the server settings by adjusting the port and IP to ensure seamless communication between the application and the database.
+Additionally, I configured the service to start automatically on system boot and initiated the application. 
+The issue was resolved, and the website is now running efficiently and reliably.
+
