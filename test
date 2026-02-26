@@ -1,3 +1,13 @@
+
+minikube status
+
+eval $(minikube -p minikube docker-env)
+
+docker build -t rsu-web-app:latest .
+
+docker images
+
+
 cloudflared tunnel --url http://localhost:8000
 
 
