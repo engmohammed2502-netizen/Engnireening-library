@@ -1,4 +1,4 @@
-
+https://maple-lou-advice-garden.trycloudflare.com 
 minikube status
 
 eval $(minikube -p minikube docker-env)
