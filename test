@@ -7,6 +7,69 @@ docker build -t rsu-web-app:latest .
 
 docker images
 
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rsu-secrets
+type: Opaque
+# استخدمنا stringData عشان نكتب البيانات زي ما هي، وكوبرنيتيس حيشفرها براه داخلياً
+stringData:
+  DJANGO_SECRET_KEY: "change_this_secret_key_in_prod"
+  DB_NAME: "rsu_db"
+  DB_USER: "rsu_user"
+  DB_PASSWORD: "rsupassword"
+
+
+
+
+# 1. هاردسك قاعدة البيانات
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce # يعني حاوية واحدة بس تقدر تقرأ وتكتب عليه في نفس الوقت
+  resources:
+    requests:
+      storage: 1Gi # طلبنا مساحة 1 جيجا، ممكن تزيدها لو حابب
+
+---
+# 2. هاردسك ملفات الاستاتيك (CSS, JS)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: static-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+# 3. هاردسك الميديا (الصور والملفات المرفوعة)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: media-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+
+kubectl apply -f secret.yaml
+
+kubectl apply -f volumes.yaml
+
+kubectl get secrets
+
+
+kubectl get pvc
+
 
 cloudflared tunnel --url http://localhost:8000
 
