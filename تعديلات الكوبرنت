@@ -1,0 +1,40 @@
+ملف الركوايرمين 
+
+whitenoise==6.4.0
+
+وفي ملف الـ settings.py، أضف السطر ده داخل قائمة الـ MIDDLEWARE 
+(لازم يكون مباشرة بعد SecurityMiddleware):
+
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # أضف السطر ده هنا
+    # ... بقية الميدل وير
+]
+
+
+
+تاكد من وجد دا في نهاية ملف الsettings
+
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+نفذ الامر دا داخل ملفات الموقع
+eval $(minikube -p minikube docker-env)
+docker build -t rsu-web-app:latest .
+
+
+
+عدل الكاماند في ملف الdijango-app
+
+
+command: ["sh", "-c", "sleep 5 && python manage.py collectstatic --noinput && python manage.py makemigrations && python manage.py migrate && python manage.py create_root_user"]
+
+
+
+kubectl delete -f django-app.yaml
+
+
+
+
+kubectl apply -f django-app.yaml
+
