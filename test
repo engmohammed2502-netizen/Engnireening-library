@@ -138,6 +138,120 @@ kubectl apply -f postgres.yaml
 
 
 
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+spec:
+  type: NodePort # ده اللي حيخلينا نصل للموقع من برا الميني كيوب
+  selector:
+    app: django
+  ports:
+    - protocol: TCP
+      port: 8000 # البورت الداخلي في الحاوية
+      targetPort: 8000
+      nodePort: 30080 # البورت اللي حتفتحه في المتصفح (تقدر تغيره لو محجوز)
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: django
+  template:
+    metadata:
+      labels:
+        app: django
+    spec:
+      # 1. الحاوية التمهيدية (للميغريشن فقط)
+      initContainers:
+        - name: migrate
+          image: rsu-web-app:latest # نفس الاسم اللي بنيناه في المرحلة الأولى
+          imagePullPolicy: IfNotPresent
+          command: ["sh", "-c", "python manage.py makemigrations && python manage.py migrate && python manage.py create_root_user"]
+          env:
+            - name: DJANGO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: rsu-secrets
+                  key: DJANGO_SECRET_KEY
+            - name: DJANGO_DEBUG
+              value: "True"
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: rsu-secrets
+                  key: DB_NAME
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: rsu-secrets
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: rsu-secrets
+                  key: DB_PASSWORD
+            - name: DB_HOST
+              value: "db" # اسم خدمة قاعدة البيانات اللي عملناها في المرحلة 3
+
+      # 2. حاوية الموقع الأساسية (Gunicorn)
+      containers:
+        - name: django
+          image: rsu-web-app:latest
+          imagePullPolicy: IfNotPresent
+          command: ["gunicorn", "wsgi:application", "--bind", "0.0.0.0:8000"]
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DJANGO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: rsu-secrets
+                  key: DJANGO_SECRET_KEY
+            - name: DJANGO_DEBUG
+              value: "True"
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: rsu-secrets
+                  key: DB_NAME
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: rsu-secrets
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: rsu-secrets
+                  key: DB_PASSWORD
+            - name: DB_HOST
+              value: "db"
+          volumeMounts:
+            - name: static-storage
+              mountPath: /app/static
+            - name: media-storage
+              mountPath: /app/media
+      
+      # ربط الهاردسكات (PVC) بالحاوية
+      volumes:
+        - name: static-storage
+          persistentVolumeClaim:
+            claimName: static-pvc
+        - name: media-storage
+          persistentVolumeClaim:
+            claimName: media-pvc
+
+
+kubectl apply -f django-app.yaml
+kubectl get pods -w
+
+
 
 cloudflared tunnel --url http://localhost:8000
 
