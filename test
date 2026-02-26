@@ -137,20 +137,19 @@ kubectl apply -f postgres.yaml
 
 
 
-
 apiVersion: v1
 kind: Service
 metadata:
   name: web-service
 spec:
-  type: NodePort # ده اللي حيخلينا نصل للموقع من برا الميني كيوب
+  type: NodePort
   selector:
     app: django
   ports:
     - protocol: TCP
-      port: 8000 # البورت الداخلي في الحاوية
+      port: 8000
       targetPort: 8000
-      nodePort: 30080 # البورت اللي حتفتحه في المتصفح (تقدر تغيره لو محجوز)
+      nodePort: 30080
 
 ---
 apiVersion: apps/v1
@@ -167,12 +166,12 @@ spec:
       labels:
         app: django
     spec:
-      # 1. الحاوية التمهيدية (للميغريشن فقط)
       initContainers:
         - name: migrate
-          image: rsu-web-app:latest # نفس الاسم اللي بنيناه في المرحلة الأولى
+          image: rsu-web-app:latest
           imagePullPolicy: IfNotPresent
-          command: ["sh", "-c", "python manage.py makemigrations && python manage.py migrate && python manage.py create_root_user"]
+          # أضفنا سليب بسيط للتأكد من جاهزية القاعدة
+          command: ["sh", "-c", "sleep 5 && python manage.py makemigrations && python manage.py migrate && python manage.py create_root_user"]
           env:
             - name: DJANGO_SECRET_KEY
               valueFrom:
@@ -197,9 +196,11 @@ spec:
                   name: rsu-secrets
                   key: DB_PASSWORD
             - name: DB_HOST
-              value: "db" # اسم خدمة قاعدة البيانات اللي عملناها في المرحلة 3
+              value: "db"
+            # الحل هنا: إجبار البورت يكون رقم
+            - name: DB_PORT
+              value: "5432"
 
-      # 2. حاوية الموقع الأساسية (Gunicorn)
       containers:
         - name: django
           image: rsu-web-app:latest
@@ -232,13 +233,14 @@ spec:
                   key: DB_PASSWORD
             - name: DB_HOST
               value: "db"
+            # نكرر الحل هنا برضه
+            - name: DB_PORT
+              value: "5432"
           volumeMounts:
             - name: static-storage
               mountPath: /app/static
             - name: media-storage
               mountPath: /app/media
-      
-      # ربط الهاردسكات (PVC) بالحاوية
       volumes:
         - name: static-storage
           persistentVolumeClaim:
@@ -247,6 +249,9 @@ spec:
           persistentVolumeClaim:
             claimName: media-pvc
 
+          
+
+          
 
 kubectl apply -f django-app.yaml
 kubectl get pods -w
