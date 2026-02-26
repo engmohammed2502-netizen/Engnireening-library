@@ -1,3 +1,14 @@
+# أخبر جانغو أنه خلف بروكسي يوفر التشفير
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# إجبار روابط static و media على استخدام https
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+
+
+
+
 https://maple-lou-advice-garden.trycloudflare.com 
 minikube status
 
