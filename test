@@ -71,6 +71,74 @@ kubectl get secrets
 kubectl get pvc
 
 
+
+
+# 1. تعريف الخدمة (العنوان اللي Django حيوصل بيه للقاعدة)
+apiVersion: v1
+kind: Service
+metadata:
+  name: db  # ركز هنا! خليناه "db" عشان يطابق الـ DB_HOST اللي في ملفاتك
+spec:
+  ports:
+    - port: 5432
+  selector:
+    app: postgres # ده بيربط الخدمة بالـ Deployment اللي تحت
+
+---
+# 2. تشغيل الحاوية (Postgres Container)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-deployment
+spec:
+  replicas: 1 # عايزين نسخة واحدة بس من قاعدة البيانات
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:13 # نفس الإصدار اللي كنت مستخدمه في الكومبوز
+          ports:
+            - containerPort: 5432
+          env:
+            # هنا بننادي البيانات من "الخزنة" (Secret) اللي عملناها في المرحلة 2
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: rsu-secrets
+                  key: DB_NAME
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: rsu-secrets
+                  key: DB_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: rsu-secrets
+                  key: DB_PASSWORD
+          volumeMounts:
+            # ربط الحاوية بالهاردسك عشان البيانات ما تضيع
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: postgres-storage
+          persistentVolumeClaim:
+            claimName: postgres-pvc # اسم الهاردسك اللي عملناه في المرحلة 2
+
+
+
+kubectl apply -f postgres.yaml
+
+
+
+
+
 cloudflared tunnel --url http://localhost:8000
 
 
