@@ -1,12 +1,53 @@
-https://labitpro.com/free-azure-lab-collection/
 
-# أخبر جانغو أنه خلف بروكسي يوفر التشفير
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+docker compose exec -t db pg_dump -U rsu_user -d rsu_db -c > my_database_backup.sql
 
-# إجبار روابط static و media على استخدام https
-SECURE_SSL_REDIRECT = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+df -h
+
+cp my_database_backup.sql /mnt/my_external_hdd/
+
+nano auto_backup.sh
+
+
+#!/bin/bash
+
+# حدد مسار مجلد المشروع بتاعك اللي فيه docker-compose
+PROJECT_DIR="/path/to/your/project" 
+
+# حدد مسار الهارد الخارجي اللي هتحفظ فيه
+EXTERNAL_HDD="/mnt/my_external_hdd"
+
+# توليد اسم ملف بيحتوي على تاريخ اليوم عشان الملفات ماتدخلش في بعض
+DATE=$(date +"%Y-%m-%d_%H-%M-%S")
+BACKUP_NAME="backup_$DATE.sql"
+
+# الذهاب لمجلد المشروع وعمل الباك اب
+cd $PROJECT_DIR
+docker compose exec -T db pg_dump -U rsu_user -d rsu_db -c > $BACKUP_NAME
+
+# نقل الملف للهارد الخارجي
+mv $BACKUP_NAME $EXTERNAL_HDD/
+
+echo "Backup done successfully at $DATE"
+
+
+chmod +x auto_backup.sh
+
+
+crontab -e
+
+0 2 * * * /path/to/your/auto_backup.sh
+
+kubectl get pods
+
+kubectl cp my_database_backup.sql <اسم_البود_هنا>:/tmp/my_database_backup.sql
+
+kubectl exec -it <اسم_البود_هنا> -- psql -U rsu_user -d rsu_db -f /tmp/my_database_backup.sql
+
+
+
+
+
+
 
 
 
