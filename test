@@ -1,3 +1,21 @@
+# إخبار جانغو أنه خلف بروكسي (الكلاود فلير)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# الشرط الذكي: 
+# لو إنت شغال محلياً (DEBUG = True)، أوقف التحويل الإجباري لـ HTTPS
+# لو الموقع في الإنتاج (DEBUG = False)، شغل الحماية
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+else:
+    SECURE_SSL_REDIRECT = False
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+
+
+
+
 
 docker compose exec -t db pg_dump -U rsu_user -d rsu_db -c > my_database_backup.sql
 
